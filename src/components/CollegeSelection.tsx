@@ -96,4 +96,8 @@ export function CollegeSelection({ onCollegeSelect }: CollegeSelectionProps) {
           <p className="text-muted-foreground text-sm">
             Secure • Modern • Intuitive
           </p>
-    
+        </div>
+      </div>
+    </div>
+  );
+}
