@@ -19,24 +19,102 @@ interface ChatbotProps {
 
 export function Chatbot({ userRole, userData }: ChatbotProps) {
   const [isOpen, setIsOpen] = useState(false);
-  const [messages, setMessages] = useState<ChatMessage[]>([
-    {
-      id: "welcome",
-      message: `Hello ${userData.name}! I'm your EvolvEd assistant. How can I help you today?`,
-      sender: "bot",
-      timestamp: new Date()
-    }
-  ]);
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [inputValue, setInputValue] = useState("");
+  const [isTyping, setIsTyping] = useState(false);
+  const [hasInitialized, setHasInitialized] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   };
 
+  // Auto-scroll to bottom when new messages are added
   useEffect(() => {
     scrollToBottom();
   }, [messages]);
+
+  // Initialize welcome message on first load
+  useEffect(() => {
+    if (!hasInitialized && userData.name) {
+      const welcomeMessage: ChatMessage = {
+        id: "welcome",
+        message: `Hello ${userData.name}! I'm your EvolvEd assistant. How can I help you today?`,
+        sender: "bot",
+        timestamp: new Date()
+      };
+      setMessages([welcomeMessage]);
+      setHasInitialized(true);
+    }
+  }, [userData.name, hasInitialized]);
+
+  // Load chat history from localStorage on component mount
+  useEffect(() => {
+    if (hasInitialized) {
+      const savedMessages = localStorage.getItem(`chatbot-messages-${userRole}-${userData.id || 'default'}`);
+      if (savedMessages) {
+        try {
+          const parsedMessages = JSON.parse(savedMessages);
+          setMessages(parsedMessages.map((msg: any) => ({
+            ...msg,
+            timestamp: new Date(msg.timestamp)
+          })));
+        } catch (error) {
+          console.warn('Failed to load chat history:', error);
+        }
+      }
+    }
+  }, [userRole, userData.id, hasInitialized]);
+
+  // Save chat history to localStorage whenever messages change
+  useEffect(() => {
+    if (messages.length > 1) { // Don't save if only welcome message exists
+      localStorage.setItem(
+        `chatbot-messages-${userRole}-${userData.id || 'default'}`,
+        JSON.stringify(messages)
+      );
+    }
+  }, [messages, userRole, userData.id]);
+
+  // Handle keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      // Escape key to close chatbot
+      if (event.key === 'Escape' && isOpen) {
+        setIsOpen(false);
+      }
+      // Ctrl/Cmd + / to toggle chatbot
+      if ((event.ctrlKey || event.metaKey) && event.key === '/') {
+        event.preventDefault();
+        setIsOpen(prev => !prev);
+      }
+    };
+
+    document.addEventListener('keydown', handleKeyDown);
+    return () => document.removeEventListener('keydown', handleKeyDown);
+  }, [isOpen]);
+
+  // Show typing indicator effect
+  useEffect(() => {
+    if (isTyping) {
+      const timer = setTimeout(() => {
+        setIsTyping(false);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [isTyping]);
+
+  // Clear chat history function (can be called externally)
+  const clearChatHistory = () => {
+    localStorage.removeItem(`chatbot-messages-${userRole}-${userData.id || 'default'}`);
+    const welcomeMessage: ChatMessage = {
+      id: "welcome",
+      message: `Hello ${userData.name}! I'm your EvolvEd assistant. How can I help you today?`,
+      sender: "bot",
+      timestamp: new Date()
+    };
+    setMessages([welcomeMessage]);
+  };
 
   const getQuickActions = () => {
     switch (userRole) {
@@ -144,8 +222,9 @@ export function Chatbot({ userRole, userData }: ChatbotProps) {
 
     setMessages(prev => [...prev, userMessage]);
     setInputValue("");
+    setIsTyping(true);
 
-    // Simulate bot response delay
+    // Simulate bot response delay with typing indicator
     setTimeout(() => {
       const botMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
@@ -154,12 +233,32 @@ export function Chatbot({ userRole, userData }: ChatbotProps) {
         timestamp: new Date()
       };
       setMessages(prev => [...prev, botMessage]);
-    }, 1000);
+      setIsTyping(false);
+    }, 1500);
   };
 
   const handleQuickAction = (action: string) => {
-    setInputValue(action);
-    handleSendMessage();
+    const userMessage: ChatMessage = {
+      id: Date.now().toString(),
+      message: action,
+      sender: "user",
+      timestamp: new Date()
+    };
+
+    setMessages(prev => [...prev, userMessage]);
+    setIsTyping(true);
+
+    // Simulate bot response delay with typing indicator
+    setTimeout(() => {
+      const botMessage: ChatMessage = {
+        id: (Date.now() + 1).toString(),
+        message: generateBotResponse(action),
+        sender: "bot",
+        timestamp: new Date()
+      };
+      setMessages(prev => [...prev, botMessage]);
+      setIsTyping(false);
+    }, 1500);
   };
 
   const formatTime = (date: Date) => {
@@ -236,6 +335,23 @@ export function Chatbot({ userRole, userData }: ChatbotProps) {
                     </div>
                   </div>
                 ))}
+                
+                {/* Typing Indicator */}
+                {isTyping && (
+                  <div className="flex items-start gap-2">
+                    <div className="w-6 h-6 rounded-full flex items-center justify-center bg-secondary">
+                      <Bot className="h-3 w-3 text-foreground" />
+                    </div>
+                    <div className="bg-secondary/50 text-foreground px-3 py-2 rounded-lg text-sm">
+                      <div className="flex gap-1">
+                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse"></div>
+                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
+                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
                 <div ref={messagesEndRef} />
               </div>
 
