@@ -66,71 +66,24 @@ export function Chatbot({ userRole, userData }: ChatbotProps) {
     }
   };
 
-  const generateBotResponse = (userMessage: string) => {
-    const lowerMessage = userMessage.toLowerCase();
+  let input=useRef("");
+  const [socket, setSocket] = useState(null);
+  useEffect(() => {
+    const ws = new WebSocket("ws://localhost:8000/ws/123");
+    setSocket(ws);
     
-    // Common responses
-    if (lowerMessage.includes("hello") || lowerMessage.includes("hi")) {
-      return `Hello ${userData.name}! How can I assist you with your ${userRole === "admin" ? "administrative tasks" : userRole === "parent" ? "child's academic information" : "academic needs"} today?`;
-    }
 
-    // Role-specific responses
-    switch (userRole) {
-      case "student":
-        if (lowerMessage.includes("attendance")) {
-          return "Your current overall attendance is 85%. Would you like to see subject-wise breakdown or set attendance reminders?";
-        }
-        if (lowerMessage.includes("grades") || lowerMessage.includes("marks")) {
-          return "Your current CGPA is 8.7. Your latest semester grades show excellent performance in most subjects. Would you like detailed grade reports?";
-        }
-        if (lowerMessage.includes("counseling") || lowerMessage.includes("counselling")) {
-          return "I can help you book a session with Dr. Sarah Johnson, your academic counselor. Her next available slot is tomorrow at 2 PM. Shall I book it for you?";
-        }
-        if (lowerMessage.includes("reports")) {
-          return "You have 4 reports available: Mid-Term Report, Assignment Grades, Attendance Report, and Performance Analytics. Which one would you like to download?";
-        }
-        break;
+     ws.onmessage = (event) => {
+      input.current =event.data ;
+    };
+    ws.onclose = () => console.log("WebSocket disconnected");
 
-      case "parent":
-        if (lowerMessage.includes("grades") || lowerMessage.includes("marks")) {
-          return "Your child's current CGPA is 8.7 with good performance across subjects. The latest semester shows particular strength in Computer Science subjects.";
-        }
-        if (lowerMessage.includes("fees") || lowerMessage.includes("payment")) {
-          return "All fee installments are up to date. The next payment of ₹62,500 is due on December 15, 2024. Would you like to view the detailed fee structure?";
-        }
-        if (lowerMessage.includes("attendance")) {
-          return "Your child's overall attendance is 85%. There are 2 subjects with attendance below 80%. Would you like me to show the detailed breakdown?";
-        }
-        if (lowerMessage.includes("counselor") || lowerMessage.includes("teacher")) {
-          return "You can contact Dr. Sarah Johnson (Academic Counselor) at s.johnson@upes.ac.in or schedule a parent-teacher meeting through the portal.";
-        }
-        break;
+    return () => ws.close();
+  },[]);
+   
+  
 
-      case "admin":
-        if (lowerMessage.includes("attendance")) {
-          return "Today's overall attendance is 78% across all classes. 23 students are absent today. Would you like the detailed class-wise breakdown?";
-        }
-        if (lowerMessage.includes("fees") || lowerMessage.includes("pending")) {
-          return "Currently, 45 students have pending fee payments totaling ₹28,12,500. 12 students have overdue payments. Shall I generate the defaulter list?";
-        }
-        if (lowerMessage.includes("report") || lowerMessage.includes("analytics")) {
-          return "I can generate various reports: Academic Performance, Attendance Analytics, Fee Status, or Custom Reports. Which type do you need?";
-        }
-        if (lowerMessage.includes("students")) {
-          return "Total enrolled students: 1,247. Active students: 1,203. Would you like specific information about any student or class?";
-        }
-        break;
-    }
 
-    // Default responses
-    const defaultResponses = [
-      "I understand you're asking about that. Let me help you find the right information. Could you be more specific?",
-      "That's a great question! I'd be happy to help. Can you provide more details about what you're looking for?",
-      "I'm here to assist you. While I work on getting better responses, you can also contact support for immediate help."
-    ];
-
-    return defaultResponses[Math.floor(Math.random() * defaultResponses.length)];
-  };
 
   const handleSendMessage = () => {
     if (!inputValue.trim()) return;
@@ -142,14 +95,18 @@ export function Chatbot({ userRole, userData }: ChatbotProps) {
       timestamp: new Date()
     };
 
+    socket.send(inputValue);
+
+
     setMessages(prev => [...prev, userMessage]);
     setInputValue("");
-
+  
     // Simulate bot response delay
     setTimeout(() => {
+      ;
       const botMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        message: generateBotResponse(inputValue),
+        message: input.current,
         sender: "bot",
         timestamp: new Date()
       };
