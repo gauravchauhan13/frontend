@@ -1,10 +1,7 @@
-import { useState } from "react";
-import { Button } from "./ui/button";
-import { Input } from "./ui/input";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "./ui/card";
-import { ArrowLeft, Lock, Mail, GraduationCap, Users, Shield } from "lucide-react";
+import React, { useState, useEffect } from "react";
+import { ArrowLeft, Lock, Mail, GraduationCap, Users, Shield, UserCheck } from "lucide-react";
 
-export type UserRole = "student" | "parent" | "admin";
+export type UserRole = "student" | "parent" | "faculty" | "admin";
 
 interface LoginProps {
   college: string;
@@ -12,29 +9,158 @@ interface LoginProps {
   onBack: () => void;
 }
 
+// Basic UI Components to make component self-contained
+const Card = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <div className={`rounded-lg border bg-card text-card-foreground shadow-sm ${className}`}>
+    {children}
+  </div>
+);
+
+const CardHeader = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <div className={`flex flex-col space-y-1.5 p-6 ${className}`}>
+    {children}
+  </div>
+);
+
+const CardContent = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <div className={`p-6 pt-0 ${className}`}>
+    {children}
+  </div>
+);
+
+const CardTitle = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <h3 className={`text-2xl font-semibold leading-none tracking-tight ${className}`}>
+    {children}
+  </h3>
+);
+
+const CardDescription = ({ children, className = "" }: { children: React.ReactNode; className?: string }) => (
+  <p className={`text-sm text-muted-foreground ${className}`}>
+    {children}
+  </p>
+);
+
+const Button = ({ 
+  children, 
+  onClick, 
+  type = "button", 
+  variant = "default", 
+  size = "default", 
+  disabled = false,
+  className = "" 
+}: { 
+  children: React.ReactNode; 
+  onClick?: () => void; 
+  type?: "button" | "submit"; 
+  variant?: "default" | "ghost" | "link"; 
+  size?: "default" | "sm"; 
+  disabled?: boolean;
+  className?: string;
+}) => {
+  const baseStyles = "inline-flex items-center justify-center rounded-md text-sm font-medium ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50";
+  const variants = {
+    default: "bg-primary text-primary-foreground hover:bg-primary/90",
+    ghost: "hover:bg-accent hover:text-accent-foreground",
+    link: "text-primary underline-offset-4 hover:underline"
+  };
+  const sizes = {
+    default: "h-10 px-4 py-2",
+    sm: "h-9 rounded-md px-3"
+  };
+  
+  return (
+    <button
+      type={type}
+      onClick={onClick}
+      disabled={disabled}
+      className={`${baseStyles} ${variants[variant]} ${sizes[size]} ${className}`}
+    >
+      {children}
+    </button>
+  );
+};
+
+const Input = ({ 
+  id, 
+  type = "text", 
+  placeholder, 
+  value, 
+  onChange, 
+  required = false,
+  className = "" 
+}: { 
+  id?: string; 
+  type?: string; 
+  placeholder?: string; 
+  value: string; 
+  onChange: (e: React.ChangeEvent<HTMLInputElement>) => void; 
+  required?: boolean;
+  className?: string;
+}) => (
+  <input
+    id={id}
+    type={type}
+    placeholder={placeholder}
+    value={value}
+    onChange={onChange}
+    required={required}
+    className={`flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50 ${className}`}
+  />
+);
+
 export function Login({ college, onLogin, onBack }: LoginProps) {
-  const [selectedRole, setSelectedRole] = useState<UserRole>("student");
+  const [detectedRole, setDetectedRole] = useState<UserRole | null>(null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+
+  // Function to detect role based on email domain
+  const detectRoleFromEmail = (emailAddress: string): UserRole | null => {
+    if (!emailAddress) return null;
+    
+    // Extract the domain part before the college domain
+    const emailParts = emailAddress.split('@');
+    if (emailParts.length !== 2) return null;
+    
+    const domainPart = emailParts[1];
+    
+    // Check for role-specific prefixes
+    if (domainPart.startsWith('stu.')) return 'student';
+    if (domainPart.startsWith('parent.')) return 'parent';
+    if (domainPart.startsWith('faculty.')) return 'faculty';
+    if (domainPart.startsWith('admin.')) return 'admin';
+    
+    return null;
+  };
+
+  // useEffect to detect role when email changes
+  useEffect(() => {
+    const role = detectRoleFromEmail(email);
+    setDetectedRole(role);
+  }, [email]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     
+    if (!detectedRole) return;
+    
     // Mock authentication - in real app would validate against backend
     const mockUserData = {
       email,
-      role: selectedRole,
+      role: detectedRole,
       college,
-      name: selectedRole === "student" ? "John Doe" : selectedRole === "parent" ? "Jane Smith" : "Admin User",
+      name: detectedRole === "student" ? "John Doe" : 
+            detectedRole === "parent" ? "Jane Smith" : 
+            detectedRole === "faculty" ? "Dr. Professor" : "Admin User",
       id: "mock-user-id",
     };
     
-    onLogin(selectedRole, mockUserData);
+    onLogin(detectedRole, mockUserData);
   };
 
   const roleOptions: { value: UserRole; label: string; icon: any }[] = [
     { value: "student", label: "Student", icon: GraduationCap },
     { value: "parent", label: "Parent", icon: Users },
+    { value: "faculty", label: "Faculty", icon: UserCheck },
     { value: "admin", label: "Admin", icon: Shield }
   ];
 
@@ -68,41 +194,6 @@ export function Login({ college, onLogin, onBack }: LoginProps) {
           </CardHeader>
           <CardContent className="space-y-6">
             <form onSubmit={handleSubmit} className="space-y-6">
-              {/* Role Selector - Enhanced pill with icons */}
-              <div className="space-y-3">
-                <label className="block text-foreground">Select Your Role</label>
-                <div className="relative bg-secondary/50 rounded-2xl p-1.5 backdrop-blur-sm">
-                  {/* Sliding indicator */}
-                  <div 
-                    className="absolute top-1.5 bottom-1.5 bg-gradient-primary rounded-xl transition-all duration-300 ease-out glow"
-                    style={{
-                      width: '33.333%',
-                      left: selectedRole === 'student' ? '0%' : selectedRole === 'parent' ? '33.333%' : '66.666%'
-                    }}
-                  />
-                  <div className="relative flex">
-                    {roleOptions.map((role) => {
-                      const Icon = role.icon;
-                      return (
-                        <button
-                          key={role.value}
-                          type="button"
-                          onClick={() => setSelectedRole(role.value)}
-                          className={`flex-1 py-3 px-4 rounded-xl transition-all duration-300 flex items-center justify-center gap-2 ${
-                            selectedRole === role.value
-                              ? "text-white"
-                              : "text-muted-foreground hover:text-foreground"
-                          }`}
-                        >
-                          <Icon className="h-4 w-4" />
-                          <span>{role.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              </div>
-
               <div className="space-y-4">
                 <div className="space-y-2">
                   <label htmlFor="email" className="block text-foreground">Email Address</label>
@@ -139,9 +230,13 @@ export function Login({ college, onLogin, onBack }: LoginProps) {
 
               <Button 
                 type="submit" 
-                className="w-full h-12 bg-gradient-primary hover:bg-gradient-primary-hover text-primary-foreground glow-hover transition-all duration-300 animate-gradient"
+                disabled={!detectedRole}
+                className="w-full h-12 bg-gradient-primary hover:bg-gradient-primary-hover text-primary-foreground glow-hover transition-all duration-300 animate-gradient disabled:opacity-50 disabled:cursor-not-allowed"
               >
-                Sign In as {roleOptions.find(r => r.value === selectedRole)?.label}
+                {detectedRole 
+                  ? `Sign In as ${roleOptions.find(r => r.value === detectedRole)?.label}`
+                  : "Enter valid email to continue"
+                }
               </Button>
             </form>
 
