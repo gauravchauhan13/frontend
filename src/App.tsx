@@ -12,10 +12,9 @@ const AdminDashboard = lazy(() => import("./components/AdminDashboard").then(mod
 // Lazy load feature pages
 const FeaturesPage = lazy(() => import("./components/FeaturesPage").then(module => ({ default: module.FeaturesPage })));
 const SolutionsPage = lazy(() => import("./components/SolutionsPage").then(module => ({ default: module.SolutionsPage })));
-const PricingPage = lazy(() => import("./components/PricingPage").then(module => ({ default: module.PricingPage })));
 const SupportPage = lazy(() => import("./components/SupportPage").then(module => ({ default: module.SupportPage })));
 
-type ViewState = "landing" | "college-selection" | "login" | "dashboard" | "features" | "solutions" | "pricing" | "support";
+type ViewState = "landing" | "college-selection" | "login" | "dashboard" | "features" | "solutions" | "support";
 
 interface UserData {
   email: string;
@@ -75,10 +74,6 @@ export default function App() {
     setCurrentView("solutions");
   };
 
-  const handleNavigateToPricing = () => {
-    setCurrentView("pricing");
-  };
-
   const handleNavigateToSupport = () => {
     setCurrentView("support");
   };
@@ -93,9 +88,6 @@ export default function App() {
         break;
       case "solutions":
         setCurrentView("solutions");
-        break;
-      case "pricing":
-        setCurrentView("pricing");
         break;
       case "support":
         setCurrentView("support");
@@ -124,13 +116,6 @@ export default function App() {
           </Suspense>
         );
         
-      case "pricing":
-        return (
-          <Suspense fallback={<LoadingSpinner />}>
-            <PricingPage onBack={handleBackToLanding} />
-          </Suspense>
-        );
-        
       case "support":
         return (
           <Suspense fallback={<LoadingSpinner />}>
@@ -139,7 +124,7 @@ export default function App() {
         );
         
       case "college-selection":
-        return <CollegeSelection onCollegeSelect={handleCollegeSelect} onBack={handleBackToLanding} />;
+        return <CollegeSelection onCollegeSelect={handleCollegeSelect} />;
         
       case "login":
         return (

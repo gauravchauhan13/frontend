@@ -78,7 +78,6 @@ src/
 │   ├── Chatbot.tsx             # AI assistant integration
 │   ├── LandingPage.tsx         # Marketing landing page
 │   ├── FeaturesPage.tsx        # Features showcase
-│   ├── PricingPage.tsx         # Pricing information
 │   ├── SolutionsPage.tsx       # Solutions overview
 │   └── SupportPage.tsx         # Support and help
 ├── App.tsx                     # Main application component

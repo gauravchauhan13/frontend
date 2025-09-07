@@ -125,7 +125,6 @@
               './src/components/Login.tsx',
               './src/components/FeaturesPage.tsx',
               './src/components/SolutionsPage.tsx',
-              './src/components/PricingPage.tsx',
               './src/components/SupportPage.tsx'
             ]
           },
