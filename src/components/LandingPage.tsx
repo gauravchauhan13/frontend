@@ -40,7 +40,7 @@ export function LandingPage({ onNavigate }: LandingPageProps) {
                 Features
               </button>
               <button
-                onClick={() => onNavigate("solution")}
+                onClick={() => onNavigate("solutions")}
                 className="text-sm font-medium text-muted-foreground hover:text-white transition-colors"
               >
                 Solutions
