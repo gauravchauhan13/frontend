@@ -5,6 +5,7 @@ import { Badge } from "./ui/badge";
 import { Progress } from "./ui/progress";
 import { DashboardLayout } from "./DashboardLayout";
 import { Chatbot } from "./Chatbot";
+import { StudentForm } from "./StudentForm";
 import { 
   Home,
   Users, 
@@ -37,6 +38,7 @@ export function ParentDashboard({ userData, onLogout }: ParentDashboardProps) {
   const navigation = [
     { id: "overview", label: "Home", icon: Home },
     { id: "student-records", label: "Student Records", icon: Users },
+    { id: "student-form", label: "Student Information", icon: FileText },
     { id: "attendance", label: "Attendance", icon: Calendar },
     { id: "reports", label: "Reports", icon: FileText },
     { id: "communications", label: "Communications", icon: MessageCircle },
@@ -269,6 +271,21 @@ export function ParentDashboard({ userData, onLogout }: ParentDashboardProps) {
                 </div>
               </CardContent>
             </Card>
+          </div>
+        );
+
+      case "student-form":
+        return (
+          <div className="space-y-6">
+            <StudentForm 
+              isOpen={true}
+              onClose={() => setActiveTab("overview")}
+              onSubmit={(data) => {
+                console.log("Student form submitted by parent:", data);
+                setActiveTab("overview");
+              }}
+              userRole="parent"
+            />
           </div>
         );
 

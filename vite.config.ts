@@ -52,6 +52,103 @@
     build: {
       target: 'esnext',
       outDir: 'build',
+      chunkSizeWarningLimit: 1000, // Increase warning limit to 1MB
+      rollupOptions: {
+        output: {
+          // Manual chunking strategy for optimal performance
+          // This splits the bundle into logical chunks that can be cached separately
+          manualChunks: {
+            // React ecosystem - loaded on initial app load
+            'react-vendor': ['react', 'react-dom'],
+            
+            // UI components - shared across all pages but can be cached
+            'ui-vendor': [
+              '@radix-ui/react-accordion',
+              '@radix-ui/react-alert-dialog',
+              '@radix-ui/react-aspect-ratio',
+              '@radix-ui/react-avatar',
+              '@radix-ui/react-checkbox',
+              '@radix-ui/react-collapsible',
+              '@radix-ui/react-context-menu',
+              '@radix-ui/react-dialog',
+              '@radix-ui/react-dropdown-menu',
+              '@radix-ui/react-hover-card',
+              '@radix-ui/react-label',
+              '@radix-ui/react-menubar',
+              '@radix-ui/react-navigation-menu',
+              '@radix-ui/react-popover',
+              '@radix-ui/react-progress',
+              '@radix-ui/react-radio-group',
+              '@radix-ui/react-scroll-area',
+              '@radix-ui/react-select',
+              '@radix-ui/react-separator',
+              '@radix-ui/react-slider',
+              '@radix-ui/react-slot',
+              '@radix-ui/react-switch',
+              '@radix-ui/react-tabs',
+              '@radix-ui/react-toggle',
+              '@radix-ui/react-toggle-group',
+              '@radix-ui/react-tooltip',
+              'lucide-react'
+            ],
+            
+            // Utility libraries - form handling and misc utilities
+            'utils-vendor': [
+              'class-variance-authority',
+              'cmdk',
+              'clsx',
+              'tailwind-merge',
+              'react-hook-form',
+              'vaul',
+              'sonner',
+              'next-themes'
+            ],
+            
+            // Charts and complex widgets - only loaded when needed
+            'charts-vendor': [
+              'recharts',
+              'react-day-picker',
+              'embla-carousel-react',
+              'react-resizable-panels'
+            ],
+            
+            // Dashboard chunks - lazy loaded based on user role
+            'student-dashboard': ['./src/components/StudentDashboard.tsx'],
+            'parent-dashboard': ['./src/components/ParentDashboard.tsx'],
+            'faculty-dashboard': ['./src/components/FacultyDashboard.tsx'],
+            'admin-dashboard': ['./src/components/AdminDashboard.tsx'],
+            
+            // Marketing/info pages - lazy loaded
+            'pages': [
+              './src/components/LandingPage.tsx',
+              './src/components/CollegeSelection.tsx',
+              './src/components/Login.tsx',
+              './src/components/FeaturesPage.tsx',
+              './src/components/SolutionsPage.tsx',
+              './src/components/SupportPage.tsx'
+            ]
+          },
+          // Configure chunk file naming
+          chunkFileNames: (chunkInfo) => {
+            const facadeModuleId = chunkInfo.facadeModuleId
+              ? chunkInfo.facadeModuleId.split('/').pop()?.replace('.tsx', '').replace('.ts', '') || 'chunk'
+              : 'chunk';
+            return `js/${facadeModuleId}-[hash].js`;
+          },
+          assetFileNames: (assetInfo) => {
+            const name = assetInfo.name || 'asset';
+            const extType = name.split('.').pop() || '';
+            if (/png|jpe?g|svg|gif|tiff|bmp|ico/i.test(extType)) {
+              return `assets/images/[name]-[hash][extname]`;
+            }
+            if (/css/i.test(extType)) {
+              return `assets/css/[name]-[hash][extname]`;
+            }
+            return `assets/[name]-[hash][extname]`;
+          },
+          entryFileNames: 'js/[name]-[hash].js',
+        },
+      },
     },
     server: {
       port: 3000,

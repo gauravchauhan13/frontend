@@ -1,0 +1,12 @@
+{
+  "name": "analyze-bundle",
+  "version": "1.0.0",
+  "description": "Bundle analysis script for College Selection Dashboard",
+  "scripts": {
+    "analyze": "npm run build && npx vite-bundle-analyzer build",
+    "build:analyze": "vite build --mode analyze",
+    "size-check": "npm run build && ls -la build/js/ && echo '\\nBundle Analysis Complete!'"
+  },
+  "keywords": ["bundle", "analysis", "vite", "performance"],
+  "author": "Your Team"
+}

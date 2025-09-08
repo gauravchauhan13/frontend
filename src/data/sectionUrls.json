@@ -1,0 +1,71 @@
+{
+  "landing": {
+    "hero": "/#hero",
+    "features": "/#features",
+    "solutions": "/#solutions",
+    "pricing": "/#pricing",
+    "support": "/#support"
+  },
+  "features": {
+    "studentManagement": "/features#student-management",
+    "academicTracking": "/features#academic-tracking",
+    "parentPortal": "/features#parent-portal",
+    "facultyTools": "/features#faculty-tools",
+    "analytics": "/features#analytics",
+    "communication": "/features#communication"
+  },
+  "solutions": {
+    "academicManagement": "/solutions#academic-management",
+    "studentEngagement": "/solutions#student-engagement",
+    "administrative": "/solutions#administrative",
+    "dataAnalytics": "/solutions#analytics",
+    "communication": "/solutions#communication",
+    "integration": "/solutions#integration"
+  },
+  "support": {
+    "phone": "/support#phone",
+    "email": "/support#email",
+    "chat": "/support#chat",
+    "form": "/support#form",
+    "documentation": "/support#documentation",
+    "faq": "/support#faq"
+  },
+  "student": {
+    "overview": "/dashboard/student#overview",
+    "profile": "/dashboard/student#profile",
+    "academic": "/dashboard/student#academic",
+    "attendance": "/dashboard/student#attendance",
+    "grades": "/dashboard/student#grades",
+    "schedule": "/dashboard/student#schedule",
+    "assignments": "/dashboard/student#assignments",
+    "studentForm": "/dashboard/student#student-form"
+  },
+  "parent": {
+    "overview": "/dashboard/parent#overview",
+    "academic": "/dashboard/parent#academic",
+    "attendance": "/dashboard/parent#attendance",
+    "fees": "/dashboard/parent#fees",
+    "communication": "/dashboard/parent#communication",
+    "reports": "/dashboard/parent#reports",
+    "studentForm": "/dashboard/parent#student-form"
+  },
+  "faculty": {
+    "overview": "/dashboard/faculty#overview",
+    "classes": "/dashboard/faculty#classes",
+    "students": "/dashboard/faculty#students",
+    "grades": "/dashboard/faculty#grades",
+    "attendance": "/dashboard/faculty#attendance",
+    "schedule": "/dashboard/faculty#schedule",
+    "assignments": "/dashboard/faculty#assignments",
+    "studentForm": "/dashboard/faculty#student-form"
+  },
+  "admin": {
+    "overview": "/dashboard/admin#overview",
+    "users": "/dashboard/admin#users",
+    "students": "/dashboard/admin#students",
+    "faculty": "/dashboard/admin#faculty",
+    "analytics": "/dashboard/admin#analytics",
+    "system": "/dashboard/admin#system",
+    "reports": "/dashboard/admin#reports"
+  }
+}

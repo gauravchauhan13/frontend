@@ -1,9 +1,14 @@
+import React from "react";
 import { useState, useRef, useEffect } from "react";
 import { Button } from "./ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "./ui/card";
 import { Input } from "./ui/input";
 import { MessageCircle, Send, X, User, Bot } from "lucide-react";
 import { UserRole } from "./Login";
+
+
+import sectionUrls from "../data/sectionUrls.json";
+
 
 interface ChatMessage {
   id: string;
@@ -144,22 +149,90 @@ export function Chatbot({ userRole, userData }: ChatbotProps) {
     }
   };
 
-  let input=useRef("");
-  const [socket, setSocket] = useState(null);
-  useEffect(() => {
-    const ws = new WebSocket("ws://localhost:8000/ws/123");
-    setSocket(ws);
-    
+  // let input = useRef("");
+  // const [socket, setSocket] = useState(null);
+  // useEffect(() => {
+  //   const ws = new WebSocket("ws://localhost:8000/ws/123");
+  //   setSocket(ws);
 
-     ws.onmessage = (event) => {
-      input.current =event.data ;
-    };
-    ws.onclose = () => console.log("WebSocket disconnected");
 
-    return () => ws.close();
-  },[]);
-   
-  
+  //    ws.onmessage = (event) => {
+  //     input.current =event.data ;
+  //   };
+  //   ws.onclose = () => console.log("WebSocket disconnected");
+
+  //   return () => ws.close();
+  // },[]);
+
+  const BASE_URL = window.location.origin;
+
+
+  const synonymsMap: Record<string, string[]> = {
+    grades: ["marks", "cgpa", "results", "performance", "score"],
+    academic: ["subjects", "studies", "courses"],
+    attendance: ["present", "absent", "classes", "presence"],
+    schedule: ["timetable", "routine", "calendar"],
+    analytics: ["data", "reports", "insights"],
+    fees: ["payments", "bills", "charges"],
+    support: ["help", "assistance", "contact"]
+  };
+
+  const ChatBot = (order) => {
+    // const [input, setInput] = useState("");
+    // const [messages, setMessages] = useState<string[]>([]);
+    // setInput(inputValue);
+    // // const handleSend = () => {
+    if (!order.trim()) return "";
+
+    const lowerInput = order.toLowerCase();
+    let foundKey: string | null = null;
+    let foundUrl: string | null = null;
+    let isSynonymMatch = false;
+
+    // 🔹 First Logic → Exact Key Match across ALL sections
+    outerLoop: for (const section of Object.values(sectionUrls)) {
+      for (const [key, path] of Object.entries(section)) {
+        if (lowerInput.includes(key.toLowerCase())) {
+          foundKey = key;
+          foundUrl = BASE_URL + path;
+          break outerLoop;
+        }
+      }
+    }
+
+    // 🔹 Second Logic → Synonym Matching across ALL sections
+    if (!foundKey) {
+      outerLoop: for (const [mainKey, words] of Object.entries(synonymsMap)) {
+        if (words.some(word => lowerInput.includes(word))) {
+          for (const section of Object.values(sectionUrls)) {
+            if (section.hasOwnProperty(mainKey)) {
+              foundKey = mainKey;
+              foundUrl = BASE_URL + (section as Record<string, string>)[mainKey];
+              isSynonymMatch = true;
+              break outerLoop;
+            }
+          }
+        }
+      }
+    }
+
+    // 🔹 Response Template
+    let response: string = "";
+    if (foundKey && foundUrl) {
+      if (isSynonymMatch) {
+        response = `🧠 I think you're asking about ${foundKey} 📝 <br>
+        Click here → <a href="${foundUrl}" target="_blank" class="text-blue-600 underline">${foundUrl}</a>`;
+      } else {
+        response = `✅ Found information for **${foundKey}** 📌<br>
+        Visit → <a href="${foundUrl}" target="_blank" class="text-blue-600 underline">${foundUrl}</a>`;
+      }
+    } else {
+      response = "😕 Sorry, I couldn’t find anything relevant. Try rephrasing your question!";
+    }
+
+    console.log(response);
+    return response;
+  }
 
 
 
@@ -173,7 +246,7 @@ export function Chatbot({ userRole, userData }: ChatbotProps) {
       timestamp: new Date()
     };
 
-    socket.send(inputValue);
+    // socket.send(inputValue);
 
 
     setMessages(prev => [...prev, userMessage]);
@@ -182,10 +255,9 @@ export function Chatbot({ userRole, userData }: ChatbotProps) {
 
     // Simulate bot response delay with typing indicator
     setTimeout(() => {
-      ;
       const botMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        message: input.current,
+        message: ChatBot(inputValue),
         sender: "bot",
         timestamp: new Date()
       };
@@ -195,6 +267,7 @@ export function Chatbot({ userRole, userData }: ChatbotProps) {
   };
 
   const handleQuickAction = (action: string) => {
+    setInputValue(action);
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
       message: action,
@@ -203,19 +276,21 @@ export function Chatbot({ userRole, userData }: ChatbotProps) {
     };
 
     setMessages(prev => [...prev, userMessage]);
+    setInputValue("");
     setIsTyping(true);
 
     // Simulate bot response delay with typing indicator
     setTimeout(() => {
+      // console.log(action)
       const botMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        message: generateBotResponse(action),
+        message: ChatBot(action),
         sender: "bot",
         timestamp: new Date()
       };
       setMessages(prev => [...prev, botMessage]);
       setIsTyping(false);
-    }, 1500);
+    }, 1000);
   };
 
   const formatTime = (date: Date) => {
@@ -254,22 +329,20 @@ export function Chatbot({ userRole, userData }: ChatbotProps) {
                 {userRole.charAt(0).toUpperCase() + userRole.slice(1)} Support
               </p>
             </CardHeader>
-            
+
             <CardContent className="p-0 flex flex-col h-80">
               {/* Messages Area */}
               <div className="flex-1 overflow-y-auto p-4 space-y-3">
                 {messages.map((message) => (
                   <div
                     key={message.id}
-                    className={`flex items-start gap-2 ${
-                      message.sender === "user" ? "flex-row-reverse" : ""
-                    }`}
+                    className={`flex items-start gap-2 ${message.sender === "user" ? "flex-row-reverse" : ""
+                      }`}
                   >
-                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${
-                      message.sender === "user" 
-                        ? "bg-gradient-primary" 
-                        : "bg-secondary"
-                    }`}>
+                    <div className={`w-6 h-6 rounded-full flex items-center justify-center ${message.sender === "user"
+                      ? "bg-gradient-primary"
+                      : "bg-secondary"
+                      }`}>
                       {message.sender === "user" ? (
                         <User className="h-3 w-3 text-white" />
                       ) : (
@@ -277,22 +350,20 @@ export function Chatbot({ userRole, userData }: ChatbotProps) {
                       )}
                     </div>
                     <div
-                      className={`max-w-[70%] px-3 py-2 rounded-lg text-sm ${
-                        message.sender === "user"
-                          ? "bg-gradient-primary text-white"
-                          : "bg-secondary/50 text-foreground"
-                      }`}
+                      className={`max-w-[70%] px-3 py-2 rounded-lg text-sm ${message.sender === "user"
+                        ? "bg-gradient-primary text-white"
+                        : "bg-secondary/50 text-foreground"
+                        }`}
                     >
                       <p>{message.message}</p>
-                      <span className={`text-xs opacity-70 ${
-                        message.sender === "user" ? "text-white" : "text-muted-foreground"
-                      }`}>
+                      <span className={`text-xs opacity-70 ${message.sender === "user" ? "text-white" : "text-muted-foreground"
+                        }`}>
                         {formatTime(message.timestamp)}
                       </span>
                     </div>
                   </div>
                 ))}
-                
+
                 {/* Typing Indicator */}
                 {isTyping && (
                   <div className="flex items-start gap-2">
@@ -302,13 +373,13 @@ export function Chatbot({ userRole, userData }: ChatbotProps) {
                     <div className="bg-secondary/50 text-foreground px-3 py-2 rounded-lg text-sm">
                       <div className="flex gap-1">
                         <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse"></div>
-                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse" style={{animationDelay: '0.2s'}}></div>
-                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse" style={{animationDelay: '0.4s'}}></div>
+                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.2s' }}></div>
+                        <div className="w-2 h-2 bg-muted-foreground rounded-full animate-pulse" style={{ animationDelay: '0.4s' }}></div>
                       </div>
                     </div>
                   </div>
                 )}
-                
+
                 <div ref={messagesEndRef} />
               </div>
 
@@ -322,6 +393,7 @@ export function Chatbot({ userRole, userData }: ChatbotProps) {
                         key={index}
                         variant="outline"
                         size="sm"
+                        // onClick={() => { setInputValue(action); handleSendMessage() }}
                         onClick={() => handleQuickAction(action)}
                         className="text-xs h-8 border-border/50 hover:bg-accent/50 text-left justify-start p-2"
                       >
